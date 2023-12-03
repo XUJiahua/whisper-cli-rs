@@ -1,11 +1,13 @@
+use std::{path::Path, time::Instant};
+
+use anyhow::{anyhow, Result};
+use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
+
 use crate::{
     ffmpeg_decoder,
     model::Model,
     transcript::{Transcript, Utternace},
 };
-use anyhow::{anyhow, Result};
-use std::{path::Path, time::Instant};
-use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, clap::ValueEnum)]
 pub enum Language {
@@ -326,20 +328,27 @@ pub struct Whisper {
 
 impl Whisper {
     pub async fn new(model: Model, lang: Option<Language>) -> Self {
+        // fixme: download is not reliable
         model.download().await;
 
         Self {
             lang,
-            ctx: WhisperContext::new(model.get_path().to_str().unwrap())
-                .expect("Failed to load model."),
+            ctx: WhisperContext::new_with_params(
+                model.get_path().to_str().unwrap(),
+                WhisperContextParameters::default(),
+            )
+            .expect("Failed to load model."),
         }
     }
 
     pub async fn from_model_path<P: AsRef<Path>>(model: P, lang: Option<Language>) -> Self {
         Self {
             lang,
-            ctx: WhisperContext::new(model.as_ref().to_str().unwrap())
-                .expect("Failed to load model."),
+            ctx: WhisperContext::new_with_params(
+                model.as_ref().to_str().unwrap(),
+                WhisperContextParameters::default(),
+            )
+            .expect("Failed to load model."),
         }
     }
 
