@@ -21,7 +21,7 @@ warp = "0.3.6"
 dirs = "5.0.1"
 anyhow = "1.0.75"
 indicatif = "0.17.6"
-whisper-rs = { version = "0.10.0", features = ["metal"] }
+whisper-rs = { git = "https://github.com/tazz4843/whisper-rs.git", features = ["coreml", "metal"] }
 futures-util = "0.3.28"
 uuid = { version = "1.4.1", features = ["v4"] }
 tokio = { version = "1.32.0", features = ["full"] }

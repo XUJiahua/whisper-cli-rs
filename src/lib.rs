@@ -16,10 +16,10 @@ pub async fn transcribe_audio<P: AsRef<Path>>(
     prompt: Option<&str>,
     response_format: Option<&str>,
     temperature: Option<f32>,
-    language: Option<String>,
+    lang: Option<&str>,
 ) -> Result<String> {
-    let mut whisper = Whisper::from_model_path(model, None).await;
-    let transcript = whisper.transcribe(audio, false, false)?;
+    let mut whisper = Whisper::from_model_path(model, Some(Language::Auto)).await;
+    let transcript = whisper.transcribe(audio, false, false, prompt)?;
 
     let response_format = response_format.unwrap_or("text");
     match response_format {
@@ -38,7 +38,7 @@ mod tests {
     async fn test_transcribe_audio() {
         let GGML_METAL_PATH_RESOURCES = "/Users/jiahua/rust_code/whisper.cpp";
         env::set_var("GGML_METAL_PATH_RESOURCES", GGML_METAL_PATH_RESOURCES);
-        let audio = "/Users/jiahua/.lwt/data/3048d90c-ed14-4b97-a3cb-49d50ee37d5d/db81a94f-db0b-4829-9b12-c02283812615/Running LLaMA 7B and 13B on a 64GB M2 MacBook Pro with llama.cpp _ Simon Willison’s TILs_20231201080824.mp3";
+        let audio = "/Users/jiahua/rust_code/whisper-rs/examples/full_usage/2830-3980-0043.wav";
         let model = "/Users/jiahua/rust_code/whisper.cpp/models/ggml-base.en.bin";
         let transcript = transcribe_audio(audio, model, None, None, None, None)
             .await

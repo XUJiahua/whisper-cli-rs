@@ -163,15 +163,17 @@ async fn handle_transcription(
 
     if let Ok((trans_req, fields)) = transcription_request {
         let audio = Path::new(trans_req.as_str());
+        let prompt = fields.get("prompt");
         let transcript = {
             let mut whisper_guard = whisper.lock().unwrap();
-            whisper_guard.transcribe(audio, false, false).unwrap()
+            whisper_guard
+                .transcribe(audio, false, false, prompt.map(|s| s.as_str()))
+                .unwrap()
         };
         println!("time: {:?}", transcript.processing_time);
         println!("fields: {:?}", fields);
 
         let lang = fields.get("language");
-        let prompt = fields.get("prompt");
         let response_format = fields
             .get("response_format")
             .map(|s| s.as_str())
@@ -280,7 +282,7 @@ async fn transcribe_audio(mut args: TranscribeArgs) {
 
     let mut whisper = Whisper::new(Model::new(args.model), args.lang).await;
     let transcript = whisper
-        .transcribe(audio, args.translate, args.karaoke)
+        .transcribe(audio, args.translate, args.karaoke, None)
         .unwrap();
     println!("time: {:?}", transcript.processing_time);
 
