@@ -361,7 +361,8 @@ impl Whisper {
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
         params.set_token_timestamps(word_timestamps);
-        params.set_language(self.lang.map(Into::into));
+        // fixme: Process exits when language detection is enabled https://github.com/tazz4843/whisper-rs/issues/103
+        // params.set_language(self.lang.map(Into::into));
 
         let audio = ffmpeg_decoder::read_file(audio)?;
 
