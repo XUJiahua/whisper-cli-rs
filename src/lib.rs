@@ -41,14 +41,31 @@ mod tests {
 
     use super::*;
 
+    struct Recorder {
+        progresses: Vec<i32>,
+    }
+
+    impl Recorder {
+        fn new() -> Self {
+            Self { progresses: vec![] }
+        }
+
+        fn record(&mut self, progress: i32) {
+            self.progresses.push(progress);
+        }
+    }
+
     #[tokio::test]
     async fn test_transcribe_audio() {
+        let mut recorder = Recorder::new();
         let GGML_METAL_PATH_RESOURCES = "/Users/jiahua/rust_code/whisper.cpp";
         env::set_var("GGML_METAL_PATH_RESOURCES", GGML_METAL_PATH_RESOURCES);
         let audio = "/Users/jiahua/rust_code/whisper-rs/examples/full_usage/2830-3980-0043.wav";
         let model = "/Users/jiahua/rust_code/whisper.cpp/models/ggml-base.en.bin";
-        let transcript = transcribe_audio(audio, model, None, None, None, None, |progress| {
+        let transcript = transcribe_audio(audio, model, None, None, None, None, move |progress| {
             println!("progress: {}", progress);
+            // fixme: how to collect progress?
+            // recorder.record(progress);
         })
         .await
         .unwrap();
