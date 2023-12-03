@@ -2,6 +2,9 @@
 
 use hound::{SampleFormat, WavReader};
 use std::path::Path;
+use std::sync::{Arc, RwLock};
+use std::thread;
+use std::time::Duration;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
 fn parse_wav_file(path: &Path) -> Vec<i16> {
@@ -53,9 +56,20 @@ fn main() {
     let mut state = ctx.create_state().expect("failed to create key");
     let mut params = FullParams::new(SamplingStrategy::default());
     params.set_initial_prompt("experience");
-    params.set_progress_callback_safe(|progress| println!("Progress callback: {}%", progress));
-    // NOTE: it will break the program
-    // params.set_language(Some("auto"));
+
+    let latest_progress = Arc::new(RwLock::new(0));
+    let latest_progress_in_callback = Arc::clone(&latest_progress);
+
+    params.set_progress_callback_safe(move |i| {
+        let mut latest_progress = latest_progress_in_callback.write().unwrap();
+        *latest_progress = i;
+    });
+
+    thread::spawn(move || loop {
+        let latest_progress = latest_progress.read().unwrap();
+        println!("Progress callback: {}%", latest_progress);
+        thread::sleep(Duration::from_millis(500));
+    });
 
     let st = std::time::Instant::now();
     state
@@ -79,4 +93,5 @@ fn main() {
         println!("[{} - {}]: {}", start_timestamp, end_timestamp, segment);
     }
     println!("took {}ms", (et - st).as_millis());
+    thread::sleep(Duration::from_millis(5000));
 }
