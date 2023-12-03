@@ -363,8 +363,9 @@ impl Whisper {
     where
         F: FnMut(i32) + 'static,
     {
+        let st = Instant::now();
+        let mut state = self.ctx.create_state().expect("failed to create state");
         let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-
         if let Some(prompt) = prompt {
             params.set_initial_prompt(prompt);
         }
@@ -380,8 +381,6 @@ impl Whisper {
 
         let audio = ffmpeg_decoder::read_file(audio)?;
 
-        let st = Instant::now();
-        let mut state = self.ctx.create_state().expect("failed to create state");
         state.full(params, &audio).expect("failed to transcribe");
 
         let num_segments = state.full_n_segments().expect("failed to get segments");
