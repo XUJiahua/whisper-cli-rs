@@ -352,13 +352,17 @@ impl Whisper {
         }
     }
 
-    pub fn transcribe<P: AsRef<Path>>(
+    pub fn transcribe<P: AsRef<Path>, F>(
         &mut self,
         audio: P,
         translate: bool,
         word_timestamps: bool,
         prompt: Option<&str>,
-    ) -> Result<Transcript> {
+        progress: F,
+    ) -> Result<Transcript>
+    where
+        F: FnMut(i32) + 'static,
+    {
         let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
 
         if let Some(prompt) = prompt {
@@ -372,6 +376,7 @@ impl Whisper {
         params.set_token_timestamps(word_timestamps);
         // fixme: Process exits when language detection is enabled https://github.com/tazz4843/whisper-rs/issues/103
         // params.set_language(self.lang.map(Into::into));
+        params.set_progress_callback_safe(progress);
 
         let audio = ffmpeg_decoder::read_file(audio)?;
 

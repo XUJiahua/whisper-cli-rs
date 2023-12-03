@@ -1,25 +1,31 @@
+use std::path::Path;
+
+use anyhow::Result;
+
+pub use model::{Model, Size};
+pub use transcript::{Transcript, Utternace};
+pub use whisper::{Language, Whisper};
+
 mod ffmpeg_decoder;
 mod model;
 mod transcript;
 mod utils;
 mod whisper;
 
-use anyhow::Result;
-pub use model::{Model, Size};
-use std::path::Path;
-pub use transcript::{Transcript, Utternace};
-pub use whisper::{Language, Whisper};
-
-pub async fn transcribe_audio<P: AsRef<Path>>(
+pub async fn transcribe_audio<P: AsRef<Path>, Q: AsRef<Path>, F>(
     audio: P,
-    model: P,
+    model: Q,
     prompt: Option<&str>,
     response_format: Option<&str>,
     temperature: Option<f32>,
     lang: Option<&str>,
-) -> Result<String> {
+    progress: F,
+) -> Result<String>
+where
+    F: FnMut(i32) + 'static,
+{
     let mut whisper = Whisper::from_model_path(model, Some(Language::Auto)).await;
-    let transcript = whisper.transcribe(audio, false, false, prompt)?;
+    let transcript = whisper.transcribe(audio, false, false, prompt, progress)?;
 
     let response_format = response_format.unwrap_or("text");
     match response_format {
@@ -31,8 +37,9 @@ pub async fn transcribe_audio<P: AsRef<Path>>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::env;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_transcribe_audio() {
@@ -40,9 +47,11 @@ mod tests {
         env::set_var("GGML_METAL_PATH_RESOURCES", GGML_METAL_PATH_RESOURCES);
         let audio = "/Users/jiahua/rust_code/whisper-rs/examples/full_usage/2830-3980-0043.wav";
         let model = "/Users/jiahua/rust_code/whisper.cpp/models/ggml-base.en.bin";
-        let transcript = transcribe_audio(audio, model, None, None, None, None)
-            .await
-            .unwrap();
+        let transcript = transcribe_audio(audio, model, None, None, None, None, |progress| {
+            println!("progress: {}", progress);
+        })
+        .await
+        .unwrap();
         println!("{}", transcript);
     }
 }

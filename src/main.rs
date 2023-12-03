@@ -167,7 +167,7 @@ async fn handle_transcription(
         let transcript = {
             let mut whisper_guard = whisper.lock().unwrap();
             whisper_guard
-                .transcribe(audio, false, false, prompt.map(|s| s.as_str()))
+                .transcribe(audio, false, false, prompt.map(|s| s.as_str()), |p| {})
                 .unwrap()
         };
         println!("time: {:?}", transcript.processing_time);
@@ -282,7 +282,7 @@ async fn transcribe_audio(mut args: TranscribeArgs) {
 
     let mut whisper = Whisper::new(Model::new(args.model), args.lang).await;
     let transcript = whisper
-        .transcribe(audio, args.translate, args.karaoke, None)
+        .transcribe(audio, args.translate, args.karaoke, None, |p| {})
         .unwrap();
     println!("time: {:?}", transcript.processing_time);
 
