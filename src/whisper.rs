@@ -353,7 +353,7 @@ impl Whisper {
     }
 
     pub fn transcribe<P: AsRef<Path>, F>(
-        &mut self,
+        &self,
         audio: P,
         translate: bool,
         word_timestamps: bool,
