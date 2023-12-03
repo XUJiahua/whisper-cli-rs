@@ -47,12 +47,15 @@ fn main() {
 
     let ctx = WhisperContext::new_with_params(
         &whisper_path.to_string_lossy(),
-        WhisperContextParameters::default()
-    ).expect("failed to open model");
+        WhisperContextParameters::default(),
+    )
+    .expect("failed to open model");
     let mut state = ctx.create_state().expect("failed to create key");
     let mut params = FullParams::new(SamplingStrategy::default());
     params.set_initial_prompt("experience");
     params.set_progress_callback_safe(|progress| println!("Progress callback: {}%", progress));
+    // NOTE: it will break the program
+    // params.set_language(Some("auto"));
 
     let st = std::time::Instant::now();
     state
