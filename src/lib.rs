@@ -37,7 +37,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+    use std::sync::{Arc, RwLock};
+    use std::{env, thread};
 
     use super::*;
 
@@ -57,18 +58,26 @@ mod tests {
 
     #[tokio::test]
     async fn test_transcribe_audio() {
-        let mut recorder = Recorder::new();
+        // fix: how to collect progress? 目前为止，这种方式可行
+        let latest_progress = Arc::new(RwLock::new(0));
+        let latest_progress_in_callback = Arc::clone(&latest_progress);
+
+        thread::spawn(move || loop {
+            let latest_progress = latest_progress.read().unwrap();
+            println!("progress: {}", *latest_progress);
+            thread::sleep(std::time::Duration::from_secs(1));
+        });
         let GGML_METAL_PATH_RESOURCES = "/Users/jiahua/rust_code/whisper.cpp";
         env::set_var("GGML_METAL_PATH_RESOURCES", GGML_METAL_PATH_RESOURCES);
         let audio = "/Users/jiahua/rust_code/whisper-rs/examples/full_usage/2830-3980-0043.wav";
         let model = "/Users/jiahua/rust_code/whisper.cpp/models/ggml-base.en.bin";
-        let transcript = transcribe_audio(audio, model, None, None, None, None, move |progress| {
-            println!("progress: {}", progress);
-            // fixme: how to collect progress?
-            // recorder.record(progress);
+        let transcript = transcribe_audio(audio, model, None, None, None, None, move |i| {
+            let mut latest_progress = latest_progress_in_callback.write().unwrap();
+            *latest_progress = i;
         })
         .await
         .unwrap();
+
         println!("{}", transcript);
     }
 }
