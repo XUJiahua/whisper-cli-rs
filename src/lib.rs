@@ -17,14 +17,14 @@ pub async fn transcribe_audio<P: AsRef<Path>, Q: AsRef<Path>, F>(
     model: Q,
     prompt: Option<&str>,
     response_format: Option<&str>,
-    temperature: Option<f32>,
-    lang: Option<&str>,
+    _temperature: Option<f32>,
+    _lang: Option<&str>,
     progress: F,
 ) -> Result<String>
 where
     F: FnMut(i32) + 'static,
 {
-    let mut whisper = Whisper::from_model_path(model, Some(Language::Auto)).await;
+    let whisper = Whisper::from_model_path(model, Some(Language::Auto)).await;
     let transcript = whisper.transcribe(audio, false, false, prompt, progress)?;
 
     let response_format = response_format.unwrap_or("text");

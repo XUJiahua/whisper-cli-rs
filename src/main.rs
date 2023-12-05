@@ -165,15 +165,15 @@ async fn handle_transcription(
         let audio = Path::new(trans_req.as_str());
         let prompt = fields.get("prompt");
         let transcript = {
-            let mut whisper_guard = whisper.lock().unwrap();
+            let whisper_guard = whisper.lock().unwrap();
             whisper_guard
-                .transcribe(audio, false, false, prompt.map(|s| s.as_str()), |p| {})
+                .transcribe(audio, false, false, prompt.map(|s| s.as_str()), |_p| {})
                 .unwrap()
         };
         println!("time: {:?}", transcript.processing_time);
         println!("fields: {:?}", fields);
 
-        let lang = fields.get("language");
+        let _lang = fields.get("language");
         let response_format = fields
             .get("response_format")
             .map(|s| s.as_str())
@@ -280,9 +280,9 @@ async fn transcribe_audio(mut args: TranscribeArgs) {
         "The selected model only supports English."
     );
 
-    let mut whisper = Whisper::new(Model::new(args.model), args.lang).await;
+    let whisper = Whisper::new(Model::new(args.model), args.lang).await;
     let transcript = whisper
-        .transcribe(audio, args.translate, args.karaoke, None, |p| {})
+        .transcribe(audio, args.translate, args.karaoke, None, |_p| {})
         .unwrap();
     println!("time: {:?}", transcript.processing_time);
 
