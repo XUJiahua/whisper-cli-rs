@@ -42,20 +42,6 @@ mod tests {
 
     use super::*;
 
-    struct Recorder {
-        progresses: Vec<i32>,
-    }
-
-    impl Recorder {
-        fn new() -> Self {
-            Self { progresses: vec![] }
-        }
-
-        fn record(&mut self, progress: i32) {
-            self.progresses.push(progress);
-        }
-    }
-
     #[tokio::test]
     async fn test_transcribe_audio() {
         // fix: how to collect progress? 目前为止，这种方式可行
